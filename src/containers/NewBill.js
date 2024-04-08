@@ -17,28 +17,39 @@ export default class NewBill {
   }
   handleChangeFile = e => {
     e.preventDefault()
-    const file = this.document.querySelector(`input[data-testid="file"]`).files[0]
-    const filePath = e.target.value.split(/\\/g)
-    const fileName = filePath[filePath.length-1]
-    const formData = new FormData()
-    const email = JSON.parse(localStorage.getItem("user")).email
-    formData.append('file', file)
-    formData.append('email', email)
+    const file = this.document.querySelector(`input[data-testid="file"]`).files[0];
+      if (!file || !file.name || !file.name.includes('.')) {
+        alert("Veuillez sélectionner un fichier valide avec une extension.");
+        e.target.value = '';
+      } else {
+      const allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
+      if (!allowedExtensions.test(file.name)) {
+        alert("Veuillez sélectionner un fichier avec une extension jpg, jpeg ou png.");
+        e.target.value = '';
+      } else {
+      const filePath = e.target.value.split(/\\/g);
+      const fileName = filePath[filePath.length-1];
+      const formData = new FormData();
+      const email = JSON.parse(localStorage.getItem("user")).email;
+      formData.append('file', file);
+      formData.append('email', email);
 
-    this.store
-      .bills()
-      .create({
-        data: formData,
-        headers: {
-          noContentType: true
-        }
-      })
-      .then(({fileUrl, key}) => {
-        console.log(fileUrl)
-        this.billId = key
-        this.fileUrl = fileUrl
-        this.fileName = fileName
-      }).catch(error => console.error(error))
+      this.store
+        .bills()
+        .create({
+          data: formData,
+          headers: {
+            noContentType: true
+          }
+        })
+        .then(({fileUrl, key}) => {
+          console.log(fileUrl)
+          this.billId = key
+          this.fileUrl = fileUrl
+          this.fileName = fileName
+        }).catch(error => console.error(error))
+      }
+    }
   }
   handleSubmit = e => {
     e.preventDefault()
