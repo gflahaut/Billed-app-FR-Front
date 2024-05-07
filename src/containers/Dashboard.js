@@ -86,16 +86,28 @@ export default class {
   }
 
   handleEditTicket(e, bill, bills) {
-    if (this.id === undefined || this.id !== bill.id) this.id = bill.id
-    bills.forEach(b => {
-      $(`#open-bill${b.id}`).css({ background: '#0D5AE5' })
-    })
-    $(`#open-bill${bill.id}`).css({ background: '#2A2B35' })
-    $('.dashboard-right-container div').html(DashboardFormUI(bill))
-    $('.vertical-navbar').css({ height: '150vh' })
-    $('#icon-eye-d').click(this.handleClickIconEye)
-    $('#btn-accept-bill').click((e) => this.handleAcceptSubmit(e, bill))
-    $('#btn-refuse-bill').click((e) => this.handleRefuseSubmit(e, bill))
+    if (this.counter === undefined || this.id !== bill.id) this.counter = 0;
+    if (this.id === undefined || this.id !== bill.id) this.id = bill.id;
+    if (this.counter % 2 === 0) {
+      bills.forEach((b) => {
+        $(`#open-bill${b.id}`).css({ background: "#0D5AE5" });
+      });
+      $(`#open-bill${bill.id}`).css({ background: "#2A2B35" });
+      $(".dashboard-right-container div").html(DashboardFormUI(bill));
+      $(".vertical-navbar").css({ height: "150vh" });
+      this.counter++;
+    } else {
+      $(`#open-bill${bill.id}`).css({ background: "#0D5AE5" });
+
+      $(".dashboard-right-container div").html(`
+        <div id="big-billed-icon" data-testid="big-billed-icon"> ${BigBilledIcon} </div>
+      `);
+      $(".vertical-navbar").css({ height: "120vh" });
+      this.counter++;
+    }
+    $("#icon-eye-d").click(this.handleClickIconEye);
+    $("#btn-accept-bill").click((e) => this.handleAcceptSubmit(e, bill));
+    $("#btn-refuse-bill").click((e) => this.handleRefuseSubmit(e, bill));
   }
 
   handleAcceptSubmit = (e, bill) => {
@@ -119,26 +131,33 @@ export default class {
   }
 
   handleShowTickets(e, bills, index) {
-    if (this.counter === undefined || this.index !== index) this.counter = 0
-    if (this.index === undefined || this.index !== index) this.index = index
-    if (this.counter % 2 === 0) {
-      $(`#arrow-icon${this.index}`).css({ transform: 'rotate(0deg)'})
-      $(`#status-bills-container${this.index}`)
-        .html(cards(filteredBills(bills, getStatus(this.index))))
-      this.counter ++
-    } else {
-      $(`#arrow-icon${this.index}`).css({ transform: 'rotate(90deg)'})
-      $(`#status-bills-container${this.index}`)
-        .html("")
-      this.counter ++
+    if (this.counter === undefined || this.index !== index) {
+      this.counter = 0;
+      this.index = index;
     }
-
-    bills.forEach(bill => {
-      $(`#open-bill${bill.id}`).click((e) => this.handleEditTicket(e, bill, bills))
-    })
-
-    return bills
-
+  
+    const $statusBillsContainer = $(`#status-bills-container${this.index}`);
+    const background = this.counter % 2 === 0 ? "#0D5AE5" : "transparent";
+    const rotation = this.counter % 2 === 0 ? "0deg" : "90deg";
+  
+    $statusBillsContainer.find(".bill-card").css({ background });
+  
+    if (this.counter % 2 === 0) {
+      $statusBillsContainer.html(cards(filteredBills(bills, getStatus(this.index))));
+    } else {
+      $statusBillsContainer.html("");
+    }
+  
+    $(`#arrow-icon${this.index}`).css({ transform: `rotate(${rotation})` });
+  
+    $statusBillsContainer.off("click").on("click", ".bill-card", (e) => {
+      const clickedBillId = e.currentTarget.id.replace("open-bill", "");
+      const clickedBill = bills.find((bill) => bill.id === clickedBillId);
+      this.handleEditTicket(e, clickedBill, bills);
+    });
+  
+    this.counter++;
+    return bills;
   }
 
   getBillsAllUsers = () => {
@@ -156,10 +175,10 @@ export default class {
         }))
         return bills
       })
-      .catch(console.log)
-      // error => {
-      //   throw error;
-      // }
+      .catch(
+      error => {
+        throw error;
+      });
     }
   }
 
@@ -171,7 +190,10 @@ export default class {
       .bills()
       .update({data: JSON.stringify(bill), selector: bill.id})
       .then(bill => bill)
-      .catch(console.log)
+      .catch(
+        error => {
+          throw error;
+        });
     }
   }
 }

@@ -1,6 +1,6 @@
 import { ROUTES_PATH } from '../constants/routes.js'
 import Logout from "./Logout.js"
-
+// vérification ancien et nouveau code  manque de fonction
 export default class NewBill {
   constructor({ document, onNavigate, store, localStorage }) {
     this.document = document
@@ -43,7 +43,6 @@ export default class NewBill {
           }
         })
         .then(({fileUrl, key}) => {
-          console.log(fileUrl)
           this.billId = key
           this.fileUrl = fileUrl
           this.fileName = fileName
