@@ -11,7 +11,14 @@ import { bills } from "../fixtures/bills.js";
 import { ROUTES, ROUTES_PATH } from "../constants/routes.js";
 
 import router from "../app/Router.js";
+
+jest.mock("../app/format", () => ({
+  formatDate: jest.fn(),
+  formatStatus: jest.fn(),
+})); 
+
 import Bills from "../containers/Bills.js";
+import { formatDate, formatStatus } from "../app/format.js";
 
 jest.mock("../app/store", () => mockStore);
 
@@ -35,6 +42,7 @@ describe("Given I am connected as an employee and I am on the Bills page", () =>
   
     expect(dates).toEqual(sortedDates);
   });
+
 
   describe("When I click on the preview icon", () => {
     test("Then a modal should open", async () => {
@@ -108,5 +116,54 @@ describe("Given I am connected as an employee and I am on the Bills page", () =>
   
     // Restore the original fetch implementation
     global.fetch.mockRestore();
+  });
+  
+  describe("Given I am connected as an employee and I am on the Bills page", () => {
+    test("handleClickNewBill navigates to NewBill route", () => {
+      const mockOnNavigate = jest.fn();
+      const component = new Bills({
+        document,
+        onNavigate: mockOnNavigate,
+        store: null,
+        localStorage: window.localStorage,
+      });
+      component.handleClickNewBill();
+      expect(mockOnNavigate).toHaveBeenCalledWith(ROUTES_PATH["NewBill"]);
+    });
+  });
+
+  describe("Given I am connected as an employee", () => {
+    describe("When an error occurs in formatDate in getBills", () => {
+      test("Then the error should be logged and the original document should be returned with formatted status", async () => {
+        const mockConsoleLog = jest.spyOn(console, "log").mockImplementation();
+        const documentData = {
+          id: "1",
+          date: "2021-05-21",
+          status: "pending"
+        };
+        formatDate.mockImplementation(() => {
+          throw new Error("Invalid date format");
+        });
+        formatStatus.mockReturnValue("En attente");
+        mockStore.bills = jest.fn(() => ({
+          list: jest.fn().mockResolvedValue([documentData])
+        }));
+  
+        const bills = new Bills({
+          document: document,
+          onNavigate: jest.fn(),
+          store: mockStore,
+          localStorage: window.localStorage,
+        });
+        const result = await bills.getBills();
+        expect(mockConsoleLog).toHaveBeenCalledWith(expect.any(Error), 'for', documentData);
+        expect(result).toEqual([{
+          ...documentData,
+          date: documentData.date,
+          status: "En attente"
+        }]);
+        mockConsoleLog.mockRestore();
+      });
+    });
   });
 });

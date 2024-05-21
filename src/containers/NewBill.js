@@ -24,7 +24,7 @@ export default class NewBill {
       } else {
       const allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
       if (!allowedExtensions.test(file.name)) {
-        alert("Veuillez sélectionner un fichier avec une extension jpg, jpeg ou png.");
+        alert("Veuillez sélectionner un fichier valide avec une extension.");
         e.target.value = '';
       } else {
       const filePath = e.target.value.split(/\\/g);
@@ -42,7 +42,7 @@ export default class NewBill {
             noContentType: true
           }
         })
-        .then(({fileUrl, key}) => {
+        .then(({fileUrl, key, fileName}) => {
           this.billId = key
           this.fileUrl = fileUrl
           this.fileName = fileName
